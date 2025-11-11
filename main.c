@@ -1,21 +1,13 @@
-#include <signal.h>
 #include <stdio.h>
 
-#define ROW(x) ((x) -1)/3
-#define COL(x) ((x) -1)%3
-
-const char *colorize(char c)
-{
-    switch(c) {
-        case 'X': return "\x1b[31mX\x1b[0m";
-        case 'O': return "\x1b[34mO\x1b[0m";
-        default: 
-                  if (c >= '0'  && c <= '9') {
-                      static char dig[][2] = {"0","1","2","3","4","5","6","7","8","9"};
-                      return dig[c - '0'];
-                  }
-                  return "?";
+const char *colorize(char c) {
+    if (c == 'X') return "\x1b[31mX\x1b[0m";
+    if (c == 'O') return "\x1b[34mO\x1b[0m";
+    if (c >= '0' && c <= '9') {
+        static const char digits[][2] = {"0","1","2","3","4","5","6","7","8","9"};
+        return digits[c - '0'];
     }
+    return "?";
 }
 
 void draw(char positons[3][3])
@@ -25,21 +17,21 @@ void draw(char positons[3][3])
     }
 }
 
-int checkWin(char board[3][3])
+int checkWin(char b[3][3], int r, int c)
 {
-    for(int i = 0; i < 3; ++i) {
-        if (board[i][0] == board[i][1] && board[i][1] == board[i][2]) return board[i][0] == 'X' ? -1 : 1;
-        if (board[0][i] == board[1][i] && board[1][i] == board[2][i]) return board[0][i] == 'X' ? -1 : 1;
-    }
-    if (board[0][0] == board[1][1] && board[1][1] == board[2][2]) return board[0][0] == 'X' ? -1 : 1;
-    if (board[0][2] == board[1][1] && board[1][1] == board[2][0]) return board[0][2] == 'X' ? -1 : 1;
+    char player = b[r][c];
+    if (b[r][0]==player && b[r][1]==player && b[r][2]==player) return player=='X'?-1:1;
+    if (b[0][c]==player && b[1][c]==player && b[2][c]==player) return player=='X'?-1:1;
+    if (r==c && b[0][0]==player && b[1][1]==player && b[2][2]==player) return player=='X'?-1:1;
+    if (r+c==2 && b[0][2]==player && b[1][1]==player && b[2][0]==player) return player=='X'?-1:1;
     return 0;
 }
+
 int main()
 {
     char positons[3][3] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
     draw(positons);
-    int shouldExit = 0, isX = 1;
+    int isX = 1;
     for (int m = 0; m < 9; ++m) {
         int inp;
         char ply = !isX ? 'X' : 'O';
@@ -49,17 +41,17 @@ int main()
             while(getchar() != '\n');
             continue;
         }
-        int row = ROW(inp), col = COL(inp);
+        int row = (inp - 1) /3, col = (inp - 1) % 3;
         if (positons[row][col] == 'X' || positons[row][col] == 'O') {
             printf("Please write empty slot!\n");
             continue;
         }
         positons[row][col] = ply;
         draw(positons);
-        int win = checkWin(positons);
+        int win = checkWin(positons, row, col);
         if (win) {
-            shouldExit = 1;
             printf("%c wins!\n", ply);
+            break;
         }
         isX = !isX;
         if (m==8) printf("TIE\n");
